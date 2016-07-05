@@ -14,26 +14,22 @@ let expect = chai.expect;
 console.log('runnng tests');
 let db;
 describe('dynamodb', () => {
-  it('test', async () => {
+  beforeEach(() => {
     db = DynamoDB.create(Region);
-    let x = sinon.stub(db._db, "listTables", () => [ 'test-table' ]);
-    let y = await db.listTablesAsync();
-    expect(x).to.equal([ 'test-table' ]);
   });
 
+  const wrapInPromise = data => ({promise: async () => ({ data: data }) });
   describe('#listTablesToScaleAsync', () => {
-    it("should return a list of tables to scale.", async function(){
-      let testPromise = db.listTablesAsync();
-      let result = await testPromise;
-      expect(result.TableNames).to.have.length.above(0);
+    let tableName = 'table1';
+    beforeEach(() => {
+      db = DynamoDB.create(Region);
+      const stubbedTables = { Items: [ { TableName:{ S: tableName } } ] } ;
+      sinon.stub(db._db, "scan", () => wrapInPromise(stubbedTables));
     });
-  });
 
-  describe('#listTablesToScaleAsync', () => {
     it("should return a list of tables to scale.", async function(){
-      let testPromise = db.listTablesToScaleAsync();
-      let result = await testPromise;
-      expect(result.TableNames).to.have.length.above(0);
+      let result = await db.listTablesToScaleAsync();
+      result.TableNames[0].should.equal(tableName);
     });
   });
 });
