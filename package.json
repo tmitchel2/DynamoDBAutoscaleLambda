@@ -13,7 +13,8 @@
   "main": "dist/index.js",
   "scripts": {
     "localtest": "babel-node ./scripts/localtest.js",
-    "test": "mocha  --compilers js:babel-register -r babel-polyfill || true",
+    "mocha": "mocha  --compilers js:babel-register -r babel-polyfill || true",
+    "test": "npm run lint && npm run check",
     "lint": "eslint src",
     "check": "flow check",
     "build": "gulp dist",
