@@ -33,13 +33,15 @@ configuration.  Please see the respective websites for advantages / reasons.
   1. Fork the repo
   2. Clone your fork
   3. Create a new file in the root folder called 'config.env.production'
-  4. Put your AWS credentials into the file in the following format, only if you want to run a local test (not needed for lambda)
-  
+  4. Put your AWS credentials and (optionally) the DynamoDB tables into the file in the following format, only if you want to run a local test (not needed for lambda).
+
     ```javascript
     AWS_ACCESS_KEY_ID="###################"
     AWS_SECRET_ACCESS_KEY="###############"
+    DYNAMODB_TABLES="[TABLE1],[TABLE2],..."
     ```
-    
+
+
   5. Update [Region.json](./src/configuration/Region.json) to match the region of your DynamoDB instance
   6. Run 'npm install'
   7. Run 'npm run build'
@@ -52,7 +54,7 @@ configuration.  Please see the respective websites for advantages / reasons.
 2. Create an AWS Policy and Role
   1. Create a policy called 'DynamoDBLambdaAutoscale'
   2. Use the following content to give access to dynamoDB, cloudwatch and lambda logging
-  
+
       ```javascript
       {
         "Version": "2012-10-17",
@@ -73,7 +75,7 @@ configuration.  Please see the respective websites for advantages / reasons.
         ]
       }
       ```
-  
+
   3. Create a role called 'DynamoDBLambdaAutoscale'
   4. Attach the newly created policy to the role
 3. Create a AWS Lambda function
