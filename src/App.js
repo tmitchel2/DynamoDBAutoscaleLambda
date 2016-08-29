@@ -26,9 +26,15 @@ export default class App {
     if (event.json && event.json.padding) {
       json.padding = event.json.padding;
     }
+    let tableNames = [];
 
-    log('Getting table names');
-    let tableNames = await this._provisioner.getTableNamesAsync();
+    if (process.env.DYNAMODB_TABLES) {
+      log('Getting table names from config');
+      tableNames = process.env.DYNAMODB_TABLES.split(',');
+    } else {
+      log('Getting table names');
+      tableNames = await this._provisioner.getTableNamesAsync();
+    }
 
     log('Getting table details');
     let tableDetails = await this._getTableDetailsAsync(tableNames);
@@ -165,7 +171,7 @@ export default class App {
         mean: stJSON['Index.handler'].histogram.mean
       },
       'DynamoDB.listTablesAsync': {
-        mean: stJSON['DynamoDB.listTablesAsync'].histogram.mean,
+        mean: stJSON['DynamoDB.listTablesAsync'] ? stJSON['DynamoDB.listTablesAsync'].histogram.mean : 0.0,
       },
       'DynamoDB.describeTableAsync': {
         mean: stJSON['DynamoDB.describeTableAsync'].histogram.mean,
