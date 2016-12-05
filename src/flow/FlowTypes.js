@@ -33,6 +33,11 @@ export type ConsumedCapacityDesc = {
   value: number,
 };
 
+export type ProvisionerConfigSet = {
+  tables: string[],
+  configuration: ProvisionerConfig
+}
+
 export type ProvisionerConfig = {
   ReadCapacity: CapacityConfig,
   WriteCapacity: CapacityConfig,

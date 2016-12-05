@@ -6,8 +6,8 @@ import Throughput from './utils/Throughput';
 import ProvisionerLogging from './provisioning/ProvisionerLogging';
 import { Region } from './configuration/Region';
 import DefaultProvisioner from './configuration/DefaultProvisioner';
-import { invariant } from './Global';
-import type { TableProvisionedAndConsumedThroughput, ProvisionerConfig, AdjustmentContext } from './flow/FlowTypes';
+import { invariant, log } from './Global';
+import type { TableProvisionedAndConsumedThroughput, ProvisionerConfig, AdjustmentContext} from './flow/FlowTypes';
 
 export default class Provisioner extends ProvisionerConfigurableBase {
 
@@ -18,29 +18,37 @@ export default class Provisioner extends ProvisionerConfigurableBase {
 
   // Gets the list of tables which we want to autoscale
   async getTableNamesAsync(): Promise<string[]> {
+    // Get all tables
+    let possibleTables = await this.db.listAllTableNamesAsync();
+    // determine what the tables we have definitions for
+    let whitelist = this.getTableWhiteList();
+    // filter out with a warning if we dont support that table
+    return possibleTables.filter(function (name) {
+      if (whitelist.indexOf(name) < 0) {
+        log('Ignoring table ' + name + ' because it is not in the whitelist');
+        return false;
+      }
+      return true;
+    });
+  }
 
-    // Option 1 - All tables (Default)
-    return await this.db.listAllTableNamesAsync();
-
-    // Option 2 - Hardcoded list of tables
-    // return ['Table1', 'Table2', 'Table3'];
-
-    // Option 3 - DynamoDB / S3 configured list of tables
-    // return await ...;
+  getTableWhiteList(): string[] {
+    let results = [];
+    for (let i = 0; i < DefaultProvisioner.length; i++) {
+      results = results.concat(DefaultProvisioner[i].tables);
+    }
+    return results;
   }
 
   // Gets the json settings which control how the specifed table will be autoscaled
-  // eslint-disable-next-line no-unused-vars
   getTableConfig(data: TableProvisionedAndConsumedThroughput): ProvisionerConfig {
-
-    // Option 1 - Default settings for all tables
-    return DefaultProvisioner;
-
-    // Option 2 - Bespoke table specific settings
-    // return data.TableName === 'Table1' ? Climbing : Default;
-
-    // Option 3 - DynamoDB / S3 sourced table specific settings
-    // return await ...;
+    for (let i = 0; i < DefaultProvisioner.length; i++) {
+      if (DefaultProvisioner[i].tables.indexOf(data.TableName) >= 0) {
+        return DefaultProvisioner[i].configuration;
+      }
+    }
+    log('using default configuration since could not one for table ' + data.TableName);
+    throw new ReferenceError('Missing configuration for table name');
   }
 
   isReadCapacityIncrementRequired(data: TableProvisionedAndConsumedThroughput): boolean {

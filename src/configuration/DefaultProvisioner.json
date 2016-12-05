@@ -1,54 +1,119 @@
-{
-  "ReadCapacity": {
-    "Min": 1,
-    "Max": 10,
-    "Increment": {
-      "When": {
-        "UtilisationIsAbovePercent": 90
+[
+  {
+    "tables": [
+      "unity_saved_state_data",
+      "unity_saved_state_data_dev",
+      "unity_saved_state_data_staging",
+      "unity_saved_state_data_mirror"
+    ],
+    "configuration": {
+      "ReadCapacity": {
+        "Min": 5,
+        "Max": 50,
+        "Increment": {
+          "When": {
+            "UtilisationIsAbovePercent": 90
+          },
+          "By": {
+            "Units": 5
+          },
+          "To": {
+            "ConsumedPercent": 110
+          }
+        },
+        "Decrement": {
+          "When": {
+            "UtilisationIsBelowPercent": 30,
+            "AfterLastIncrementMinutes": 60,
+            "AfterLastDecrementMinutes": 60,
+            "UnitAdjustmentGreaterThan": 5
+          },
+          "To": {
+            "ConsumedPercent": 100
+          }
+        }
       },
-      "By": {
-        "Units": 3
-      },
-      "To": {
-        "ConsumedPercent": 110
-      }
-    },
-    "Decrement": {
-      "When": {
-        "UtilisationIsBelowPercent": 30,
-        "AfterLastIncrementMinutes": 60,
-        "AfterLastDecrementMinutes": 60,
-        "UnitAdjustmentGreaterThan": 5
-      },
-      "To": {
-        "ConsumedPercent": 100
+      "WriteCapacity": {
+        "Min": 5,
+        "Max": 100,
+        "Increment": {
+          "When": {
+            "UtilisationIsAbovePercent": 90
+          },
+          "By": {
+            "Units": 10
+          },
+          "To": {
+            "ConsumedPercent": 110
+          }
+        },
+        "Decrement": {
+          "When": {
+            "UtilisationIsBelowPercent": 30,
+            "AfterLastIncrementMinutes": 60,
+            "AfterLastDecrementMinutes": 60,
+            "UnitAdjustmentGreaterThan": 5
+          },
+          "To": {
+            "ConsumedPercent": 100
+          }
+        }
       }
     }
   },
-  "WriteCapacity": {
-    "Min": 1,
-    "Max": 10,
-    "Increment": {
-      "When": {
-        "UtilisationIsAbovePercent": 90
+  {
+    "tables": [
+      "unity_saved_state_data_production"
+    ],
+    "configuration":{
+      "ReadCapacity": {
+        "Min": 20,
+        "Max": 500,
+        "Increment": {
+          "When": {
+            "UtilisationIsAbovePercent": 75
+          },
+          "By": {
+            "ConsumedPercent": 30,
+            "Units": 20
+          }
+        },
+        "Decrement": {
+          "When": {
+            "UtilisationIsBelowPercent": 35,
+            "AfterLastIncrementMinutes": 60,
+            "AfterLastDecrementMinutes": 60,
+            "UnitAdjustmentGreaterThan": 10
+          },
+          "To": {
+            "ConsumedPercent": 100
+          }
+        }
       },
-      "By": {
-        "Units": 3
-      },
-      "To": {
-        "ConsumedPercent": 110
-      }
-    },
-    "Decrement": {
-      "When": {
-        "UtilisationIsBelowPercent": 30,
-        "AfterLastIncrementMinutes": 60,
-        "AfterLastDecrementMinutes": 60,
-        "UnitAdjustmentGreaterThan": 5
-      },
-      "To": {
-        "ConsumedPercent": 100
+      "WriteCapacity": {
+        "Min": 25,
+        "Max": 400,
+        "Increment": {
+          "When": {
+            "UtilisationIsAbovePercent": 75
+          },
+          "By": {
+            "ProvisionedPercent": 10,
+            "Units": 10
+          }
+        },
+        "Decrement": {
+          "When": {
+            "UtilisationIsBelowPercent": 30,
+            "AfterLastIncrementMinutes": 60,
+            "AfterLastDecrementMinutes": 60,
+            "UnitAdjustmentGreaterThan": 5
+          },
+          "To": {
+            "ConsumedPercent": 100
+          }
+        }
       }
     }
   }
-}
+]

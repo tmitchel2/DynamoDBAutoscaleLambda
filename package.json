@@ -20,7 +20,8 @@
     "lint": "eslint src",
     "check": "flow check",
     "build": "gulp dist",
-    "start": "node ./scripts/start.js",
+    "start": "gulp dist && node ./scripts/start.js",
+    "start-norebuild": "node ./scripts/start.js",
     "debug": "node-debug ./scripts/start.js"
   },
   "dependencies": {},
