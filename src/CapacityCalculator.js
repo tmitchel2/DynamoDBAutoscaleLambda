@@ -9,7 +9,7 @@ export default class CapacityCalculator extends CapacityCalculatorBase {
 
   // Get the region
   getCloudWatchRegion() {
-    return Region;
+    return process.env.DDB_AUTOSCALE_REGION || Region;
   }
 
   getStatisticSettings(): StatisticSettings {
