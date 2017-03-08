@@ -8,6 +8,7 @@ import { Region } from './configuration/Region';
 import DefaultProvisioner from './configuration/DefaultProvisioner';
 import { invariant } from './Global';
 import type { TableProvisionedAndConsumedThroughput, ProvisionerConfig, AdjustmentContext } from './flow/FlowTypes';
+import EnvironmentProvisioner from './EnvironmentProvisioner';
 
 export default class Provisioner extends ProvisionerConfigurableBase {
 
@@ -34,7 +35,7 @@ export default class Provisioner extends ProvisionerConfigurableBase {
   getTableConfig(data: TableProvisionedAndConsumedThroughput): ProvisionerConfig {
 
     // Option 1 - Default settings for all tables
-    return DefaultProvisioner;
+    return EnvironmentProvisioner;
 
     // Option 2 - Bespoke table specific settings
     // return data.TableName === 'Table1' ? Climbing : Default;
