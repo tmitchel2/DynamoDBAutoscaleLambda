@@ -21,10 +21,10 @@ export default class Provisioner extends ProvisionerConfigurableBase {
 
     // Option 1
     // User may pass in comma separated list of tables as ENV VAR 'TABLE_NAMES' to describe tables to manage, or leave it blank to manage all tables
-    if (process.env.TABLE_NAME != null) {
+    if (process.env.TABLE_NAMES != null) {
       return process.env.TABLE_NAMES.replace(/ /g,'').split(",");
     } else {
-      return this.db.listAllTableNamesAsync();
+      return await this.db.listAllTableNamesAsync();
     }
 
     // Option 2 - DynamoDB / S3 configured list of tables
