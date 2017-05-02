@@ -96,7 +96,7 @@ configuration.  Please see the respective websites for advantages / reasons.
 
 The default setup in the [Provisioner.js](./src/Provisioner.js) allows for a quick no touch setup.
 A breakdown of the configuration behaviour is as follows:
-- AWS region is set to 'us-east-1' via [Region.json](./src/configuration/Region.json) configuration
+- AWS region is set to 'ap-southeast-2' via [Region.json](./src/configuration/Region.json) configuration
 - Autoscales all tables and indexes
 - Autoscaling 'Strategy' settings are defined in [DefaultProvisioner.json](./src/configuration/DefaultProvisioner.json) and are as follows
   - Separate 'Read' and 'Write' capacity adjustment strategies
