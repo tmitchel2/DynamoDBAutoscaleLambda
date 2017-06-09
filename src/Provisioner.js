@@ -13,19 +13,23 @@ export default class Provisioner extends ProvisionerConfigurableBase {
 
   // Get the region
   getDynamoDBRegion(): string {
-    return Region;
+    return process.env.DDB_AUTOSCALE_REGION || Region;
   }
 
   // Gets the list of tables which we want to autoscale
   async getTableNamesAsync(): Promise<string[]> {
+    // Option 1 - Tables defined by an environment variable if defined
+    if ('DDB_AUTOSCALE_TABLES' in process.env && typeof process.env.DDB_AUTOSCALE_TABLES === 'string') {
+      return process.env.DDB_AUTOSCALE_TABLES.split(',');
+    }
 
-    // Option 1 - All tables (Default)
+    // Option 2 - All tables (Default)
     return await this.db.listAllTableNamesAsync();
 
-    // Option 2 - Hardcoded list of tables
+    // Option 3 - Hardcoded list of tables
     // return ['Table1', 'Table2', 'Table3'];
 
-    // Option 3 - DynamoDB / S3 configured list of tables
+    // Option 4 - DynamoDB / S3 configured list of tables
     // return await ...;
   }
 

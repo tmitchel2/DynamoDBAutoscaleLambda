@@ -13,7 +13,22 @@ import type {
   TableConsumedCapacityDescription,
 } from '../flow/FlowTypes';
 
+import { SNS } from 'aws-sdk';
+import { log } from '../Global';
+
 export default class ProvisionerConfigurableBase extends ProvisionerBase {
+  logSnsMessage(arn: ?string, subject: string, message: string) {
+    if (arn) {
+      const sns = new SNS();
+      const params = {
+        Message: message,
+        Subject: subject,
+        TopicArn: arn
+      };
+
+      sns.publish(params, (...args) => { log('Sent through an SNS message', args, params); });
+    }
+  }
 
   // eslint-disable-next-line no-unused-vars
   isReadCapacityIncrementRequired(data: TableProvisionedAndConsumedThroughput): boolean {
@@ -128,9 +143,19 @@ export default class ProvisionerConfigurableBase extends ProvisionerBase {
         newProvisionedThroughput.ReadCapacityUnits = this
           .calculateIncrementedReadCapacityValue(params);
 
+        const subject = `Increasing RCU for ${params.TableName}`;
+        const message = `Increasing read capacity units from ${params.ProvisionedThroughput.ReadCapacityUnits} to ${newProvisionedThroughput.ReadCapacityUnits}`;
+
+        this.logSnsMessage(process.env.DDB_AUTOSCALE_SNS_ARN, subject, message);
+
       } else if (this.isReadCapacityDecrementRequired(params)) {
         newProvisionedThroughput.ReadCapacityUnits = this
           .calculateDecrementedReadCapacityValue(params);
+
+        const subject = `Decreasing RCU for ${params.TableName}`;
+        const message = `Decreasing read capacity units from ${params.ProvisionedThroughput.ReadCapacityUnits} to ${newProvisionedThroughput.ReadCapacityUnits}`;
+
+        this.logSnsMessage(process.env.DDB_AUTOSCALE_SNS_ARN, subject, message);
       }
 
       // Adjust write capacity
@@ -138,9 +163,18 @@ export default class ProvisionerConfigurableBase extends ProvisionerBase {
         newProvisionedThroughput.WriteCapacityUnits = this
           .calculateIncrementedWriteCapacityValue(params);
 
+        const subject = `Increasing WCU for ${params.TableName}`;
+        const message = `Increasing write capacity units from ${params.ProvisionedThroughput.WriteCapacityUnits} to ${newProvisionedThroughput.WriteCapacityUnits}`;
+
+        this.logSnsMessage(process.env.DDB_AUTOSCALE_SNS_ARN, subject, message);
       } else if (this.isWriteCapacityDecrementRequired(params)) {
         newProvisionedThroughput.WriteCapacityUnits = this
           .calculateDecrementedWriteCapacityValue(params);
+
+        const subject = `Decreasing WCU for ${params.TableName}`;
+        const message = `Decreasing write capacity units from ${params.ProvisionedThroughput.WriteCapacityUnits} to ${newProvisionedThroughput.WriteCapacityUnits}`;
+
+        this.logSnsMessage(process.env.DDB_AUTOSCALE_SNS_ARN, subject, message);
       }
 
       if (newProvisionedThroughput.ReadCapacityUnits ===
