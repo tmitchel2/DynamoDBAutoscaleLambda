@@ -1,0 +1,109 @@
+{
+  "Description": "AWS DynamoDB Capacity AutoScaling via Lambda Cron Job",
+  "Parameters": {
+    "CodeS3Bucket": {
+      "Type": "String",
+      "Description": "Enter S3 Bucket name where your dist.zip file is located"
+    },
+    "CodeS3Key": {
+      "Type": "String",
+      "Default": "dist.zip",
+      "Description": "Enter S3 Key for your dist.zip file"
+    },
+    "LambdaTimeout": {
+      "Type": "Number",
+      "Default": "15",
+      "Description": "Timeout (seconds) for the Lambda function"
+    },
+    "LambdaMemory": {
+      "Type": "Number",
+      "Default": "128",
+      "AllowedValues": [
+        "128", "192", "256", "320", "384", "448", "512", "576", "640", "704", "768", "832", "896", "960", "1024", "1088", "1152", "1216", "1280", "1344", "1408", "1472", "1536"
+      ],
+      "Description": "Memory size in MB for Lambda function"
+    }
+  },
+  "Resources": {
+    "DynamoDBLambdaAutoScaleRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "DynamoDBLambdaAutoScale",
+        "AssumeRolePolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [ {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [ "lambda.amazonaws.com" ]
+            },
+            "Action": [ "sts:AssumeRole" ]
+          } ]
+        },
+        "Path": "/"
+      }
+    },
+    "DynamoDBLambdaAutoScalePolicy": {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "Description": "Policy for DynamoDB AutoScaling via Lambda",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "dynamodb:ListTables",
+                "dynamodb:DescribeTable",
+                "dynamodb:UpdateTable",
+                "cloudwatch:GetMetricStatistics",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Effect": "Allow",
+              "Resource": "*"
+            }
+          ]
+        },
+        "Roles": [
+          { "Ref" : "DynamoDBLambdaAutoScaleRole" }
+        ]
+      }
+    },
+    "DynamoDBAutoScaleLambdaFunc": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Description": "DynamoDB Capacity AutoScaler",
+        "Code": {
+          "S3Bucket": {"Ref": "CodeS3Bucket"},
+          "S3Key": {"Ref": "CodeS3Key"}
+        },
+        "MemorySize": { "Ref": "LambdaMemory" },
+        "Handler": "index.handler",
+        "Role": { "Fn::GetAtt" : ["DynamoDBLambdaAutoScaleRole", "Arn"] },
+        "Runtime": "nodejs4.3",
+        "Timeout": { "Ref": "LambdaTimeout" }
+      }
+    },
+    "EveryMinuteEvent": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "Description": "CloudWatch Scheduled Event (Every Minute)",
+        "ScheduleExpression": "rate(1 minute)",
+        "State": "ENABLED",
+        "Targets": [{
+          "Arn": { "Fn::GetAtt": ["DynamoDBAutoScaleLambdaFunc", "Arn" ] },
+          "Id": "TargetDynamoLambdaAutoScaling"
+        }]
+      }
+    },
+    "PermissionForEventsToInvokeLambda": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": { "Ref": "DynamoDBAutoScaleLambdaFunc" },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "events.amazonaws.com",
+        "SourceArn" : { "Fn::GetAtt" : ["EveryMinuteEvent", "Arn"]}
+      }
+    }
+  }
+}
