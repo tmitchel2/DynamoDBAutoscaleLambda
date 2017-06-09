@@ -97,7 +97,10 @@ configuration.  Please see the respective websites for advantages / reasons.
 The default setup in the [Provisioner.js](./src/Provisioner.js) allows for a quick no touch setup.
 A breakdown of the configuration behaviour is as follows:
 - AWS region is set to 'us-east-1' via [Region.json](./src/configuration/Region.json) configuration
-- Autoscales all tables and indexes
+- Configure Tables to scale:
+  - If you wish to autoscale only some tables in your account, create an environment variable `TABLE_NAMES` with comma separated list of table names
+    - All secondary indexes of these tables will also be autoscaled
+  - Exclude `TABLE_NAMES` to autoscale all tables and indexes
 - Autoscaling 'Strategy' settings are defined in [DefaultProvisioner.json](./src/configuration/DefaultProvisioner.json) and are as follows
   - Separate 'Read' and 'Write' capacity adjustment strategies
   - Separate asymmetric 'Increment' and 'Decrement' capacity adjustment strategies
