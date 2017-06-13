@@ -41,6 +41,15 @@ export default class Provisioner extends ProvisionerConfigurableBase {
 
     // Option 3 - DynamoDB / S3 sourced table specific settings
     // return await ...;
+    
+    // Option 4 - Modify certain defaults with env vars
+    DefaultProvisioner.ReadCapacity.Min = process.env.AWS_MIN_READ || 5;
+    DefaultProvisioner.ReadCapacity.Max = process.env.AWS_MIN_WRITE || 100;
+    DefaultProvisioner.WriteCapacity.Min = process.env.AWS_MIN_WRITE || 1;
+    DefaultProvisioner.WriteCapacity.Max = process.env.AWS_MIN_WRITE || 100;
+   
+    console.log(DefaultProvisioner);
+    return DefaultProvisioner;
   }
 
   isReadCapacityIncrementRequired(data: TableProvisionedAndConsumedThroughput): boolean {
