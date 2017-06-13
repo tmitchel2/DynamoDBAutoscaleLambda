@@ -21,13 +21,37 @@ export default class Provisioner extends ProvisionerConfigurableBase {
   async getTableNamesAsync(): Promise<string[]> {
 
     // Option 1 - All tables (Default)
-    return await this.db.listAllTableNamesAsync();
+    //return await this.db.listAllTableNamesAsync();
 
     // Option 2 - Hardcoded list of tables
     // return ['Table1', 'Table2', 'Table3'];
 
     // Option 3 - DynamoDB / S3 configured list of tables
     // return await ...;
+
+    // Option 4 - Select all tables with a specific tag
+    return await this.db.listAllTableNamesAsync()
+    .then(list => {
+			return Promise.all(list.map(name => {
+				const params = { ResourceArn: `arn:aws:dynamodb:${process.env.AWS_REGION}:${process.env.AWS_ACCOUNT_NUMBER}:table/${name}`   };
+
+				return new Promise((resolve, reject) => {
+					// Required to throttle the requests (AWS only accepts 10 of these calls per second per account)
+					setTimeout(() => {
+						db.listTagsOfResource(params, (err, {Tags}) => {
+							if (err) return reject(err);
+
+							return resolve({ tableName: name, tags: Tags   });
+						});
+					}, 100)
+				});
+			}))
+			.then(list => {
+				return list
+				.filter(pkg => { return pkg.tags.some(tag => tag.Key === process.env.AWS_AUTOSCALE_TAG_NAME || 'autoscaled' && tag.Value.match(/true/g));   })
+				.map(pkg => pkg.tableName);
+			})
+    })
   }
 
   // Gets the json settings which control how the specifed table will be autoscaled
