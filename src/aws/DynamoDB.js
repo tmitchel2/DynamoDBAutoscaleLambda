@@ -11,6 +11,8 @@ import type {
   UpdateTableResponse,
   ListTablesRequest,
   ListTablesResponse,
+  ListTagsRequest,
+  ListTagsResponse,
 } from 'aws-sdk';
 
 export default class DynamoDB {
@@ -52,6 +54,21 @@ export default class DynamoDB {
     }
   }
 
+  async listTagsAsync(params: ?ListTagsRequest): Promise<ListTagsResponse> {
+    let sw = stats.timer('DynamoDB.listTagsAsync').start();
+    try {
+      return await this._db.listTagsOfResource(params).promise();
+    } catch (ex) {
+      warning(JSON.stringify({
+        class: 'DynamoDB',
+        function: 'listTagsAsync'
+      }, null, json.padding));
+      throw ex;
+    } finally {
+      sw.end();
+    }
+  }
+
   async listAllTableNamesAsync(): Promise<string[]> {
     let tableNames = [];
     let lastTable;
@@ -61,6 +78,17 @@ export default class DynamoDB {
       lastTable = listTablesResponse.LastEvaluatedTableName;
     } while (lastTable);
     return tableNames;
+  }
+
+  async listTagsOfResourceAsync(params): Promise<string[]> {
+    let tagValues = [];
+    let nextToken;
+    do {
+      let listTagsResponse = await this.listTagsAsync(params);
+      tagValues = tagValues.concat(listTagsResponse.Tags);
+      nextToken = listTagsResponse.NextToken;
+    } while (nextToken);
+    return tagValues;
   }
 
   async describeTableAsync(params: DescribeTableRequest): Promise<DescribeTableResponse> {
