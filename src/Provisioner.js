@@ -6,6 +6,7 @@ import Throughput from './utils/Throughput';
 import ProvisionerLogging from './provisioning/ProvisionerLogging';
 import { Region } from './configuration/Region';
 import DefaultProvisioner from './configuration/DefaultProvisioner';
+import CustomProvisioners from './configuration/CustomProvisioners';
 import { invariant } from './Global';
 import type { TableProvisionedAndConsumedThroughput, ProvisionerConfig, AdjustmentContext } from './flow/FlowTypes';
 
@@ -34,22 +35,16 @@ export default class Provisioner extends ProvisionerConfigurableBase {
   getTableConfig(data: TableProvisionedAndConsumedThroughput): ProvisionerConfig {
 
     // Option 1 - Default settings for all tables
-    return DefaultProvisioner;
+    // return DefaultProvisioner;
 
     // Option 2 - Bespoke table specific settings
     // return data.TableName === 'Table1' ? Climbing : Default;
 
     // Option 3 - DynamoDB / S3 sourced table specific settings
     // return await ...;
-    
-    // Option 4 - Modify certain defaults with env vars
-    DefaultProvisioner.ReadCapacity.Min = process.env.AWS_MIN_READ || 5;
-    DefaultProvisioner.ReadCapacity.Max = process.env.AWS_MIN_WRITE || 100;
-    DefaultProvisioner.WriteCapacity.Min = process.env.AWS_MIN_WRITE || 1;
-    DefaultProvisioner.WriteCapacity.Max = process.env.AWS_MIN_WRITE || 100;
-   
-    console.log(DefaultProvisioner);
-    return DefaultProvisioner;
+
+    // Option 4 - Get the table specific config based on table name
+    return CustomProvisioners[data.TableName] || DefaultProvisioner;
   }
 
   isReadCapacityIncrementRequired(data: TableProvisionedAndConsumedThroughput): boolean {
