@@ -22,7 +22,7 @@ export default class Provisioner extends ProvisionerConfigurableBase {
 
     // Option 1: Identify tables by custom tag
     if (process.env.DDB_AUTOSCALE_USE_TAGS) {
-      if (!process.env.AWS_REGION || !process.env.AWS_ACCOUNT_NUMBER || !process.env.AWS_AUTOSCALE_TAG_NAME) {
+      if (!process.env.AWS_REGION || !process.env.AWS_ACCOUNT_NUMBER || !process.env.DDB_AUTOSCALE_TAG_NAME) {
         throw new Error('Missing environemnt variables to build the AWS ARN');
       }
 
@@ -43,7 +43,7 @@ export default class Provisioner extends ProvisionerConfigurableBase {
         })
         .then(tableNamesWithTags => {
           return tableNamesWithTags
-            .filter(pkg => { return pkg.tags.some(tag => tag.Key === process.env.AWS_AUTOSCALE_TAG_NAME || 'autoscaled' && tag.Value.match(/true/g)); })
+            .filter(pkg => { return pkg.tags.some(tag => tag.Key === process.env.DDB_AUTOSCALE_TAG_NAME || 'autoscaled' && tag.Value.match(/true/g)); })
             .map(pkg => pkg.tableName);
         })
         .then(tableNames => {
