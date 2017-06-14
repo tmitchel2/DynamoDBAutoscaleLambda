@@ -62,6 +62,16 @@ declare module 'aws-sdk' {
      TableNames: string[]
   };
 
+  declare type ListTagsRequest = {
+     NextToken?: string,
+     ResourceArn?: string
+  };
+
+  declare type ListTagsResponse = {
+     NextToken?: string,
+     Tags: string[]
+  };
+
   declare type DeleteTableRequest = {
      TableName: string,
   };

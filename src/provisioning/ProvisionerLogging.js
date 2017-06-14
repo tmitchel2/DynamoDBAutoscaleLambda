@@ -6,6 +6,10 @@ import type {
 } from '../flow/FlowTypes';
 
 export default class ConfigLogging {
+  static logIdentifiedTables(tableNames) {
+    log('The following tables were identified for autoscaling:', tableNames);
+  }
+
   static isAdjustmentRequiredLog(
     adjustmentContext: AdjustmentContext,
     adjustmentData: AdjustmentData,
