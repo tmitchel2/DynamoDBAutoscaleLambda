@@ -20,44 +20,46 @@ export default class Provisioner extends ProvisionerConfigurableBase {
   // Gets the list of tables which we want to autoscale
   async getTableNamesAsync(): Promise<string[]> {
 
-    // Option 1 - All tables (Default)
-    // return await this.db.listAllTableNamesAsync();
+    // Option 1: Identify tables by custom tag
+    if (process.env.DDB_AUTOSCALE_USE_TAGS) {
+      if (!process.env.AWS_REGION || !process.env.AWS_ACCOUNT_NUMBER || !process.env.AWS_AUTOSCALE_TAG_NAME) {
+        throw new Error('Missing environemnt variables to build the AWS ARN');
+      }
 
-    // Option 2 - Hardcoded list of tables
-    // return ['Table1', 'Table2', 'Table3'];
+      return await this.db.listAllTableNamesAsync()
+        .then(list => {
+          return Promise.all(list.map(name => {
+            const params = { ResourceArn: `arn:aws:dynamodb:${process.env.AWS_REGION}:${process.env.AWS_ACCOUNT_NUMBER}:table/${name}` };
 
-    // Option 3 - DynamoDB / S3 configured list of tables
-    // return await ...;
-
-    // Option 4 - Select all tables with a specific tag
-    if (!process.env.AWS_REGION || !process.env.AWS_ACCOUNT_NUMBER || !process.env.AWS_AUTOSCALE_TAG_NAME) {
-      throw new Error('Missing environemnt variables to build the AWS ARN');
+            return new Promise((resolve, reject) => {
+              // Required to throttle the requests (AWS only accepts 10 of these calls per second per account)
+              setTimeout(() => {
+                this.db.listTagsOfResourceAsync(params)
+                  .then(tags => resolve({ tableName: name, tags }))
+                  .catch(reject);
+              }, 100);
+            });
+          }));
+        })
+        .then(tableNamesWithTags => {
+          return tableNamesWithTags
+            .filter(pkg => { return pkg.tags.some(tag => tag.Key === process.env.AWS_AUTOSCALE_TAG_NAME || 'autoscaled' && tag.Value.match(/true/g)); })
+            .map(pkg => pkg.tableName);
+        })
+        .then(tableNames => {
+          ProvisionerLogging.logIdentifiedTables(tableNames);
+          return tableNames;
+        });
     }
 
-    return await this.db.listAllTableNamesAsync()
-      .then(list => {
-        return Promise.all(list.map(name => {
-          const params = { ResourceArn: `arn:aws:dynamodb:${process.env.AWS_REGION}:${process.env.AWS_ACCOUNT_NUMBER}:table/${name}` };
+    // Option 2 - All tables (Default)
+    return await this.db.listAllTableNamesAsync();
 
-          return new Promise((resolve, reject) => {
-            // Required to throttle the requests (AWS only accepts 10 of these calls per second per account)
-            setTimeout(() => {
-              this.db.listTagsOfResourceAsync(params)
-                .then(tags => resolve({ tableName: name, tags }))
-                .catch(reject);
-            }, 100);
-          });
-        }));
-      })
-      .then(tableNamesWithTags => {
-        return tableNamesWithTags
-          .filter(pkg => { return pkg.tags.some(tag => tag.Key === process.env.AWS_AUTOSCALE_TAG_NAME || 'autoscaled' && tag.Value.match(/true/g)); })
-          .map(pkg => pkg.tableName);
-      })
-      .then(tableNames => {
-        ProvisionerLogging.logIdentifiedTables(tableNames);
-        return tableNames;
-      });
+    // Option 3 - Hardcoded list of tables
+    // return ['Table1', 'Table2', 'Table3'];
+
+    // Option 4 - DynamoDB / S3 configured list of tables
+    // return await ...;
   }
 
   // Gets the json settings which control how the specifed table will be autoscaled
