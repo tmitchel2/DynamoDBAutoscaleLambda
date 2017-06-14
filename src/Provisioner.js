@@ -66,17 +66,14 @@ export default class Provisioner extends ProvisionerConfigurableBase {
   // eslint-disable-next-line no-unused-vars
   getTableConfig(data: TableProvisionedAndConsumedThroughput): ProvisionerConfig {
 
-    // Option 1 - Default settings for all tables
-    // return DefaultProvisioner;
+    // Option 1 - Default settings for all tables unless included in CustomProvisioners.json
+    return (CustomProvisioners || {})[data.TableName] || DefaultProvisioner;
 
     // Option 2 - Bespoke table specific settings
     // return data.TableName === 'Table1' ? Climbing : Default;
 
     // Option 3 - DynamoDB / S3 sourced table specific settings
     // return await ...;
-
-    // Option 4 - Get the table specific config based on table name
-    return CustomProvisioners[data.TableName] || DefaultProvisioner;
   }
 
   isReadCapacityIncrementRequired(data: TableProvisionedAndConsumedThroughput): boolean {
